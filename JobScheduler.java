@@ -7,7 +7,7 @@ public class JobScheduler {
     static final String DB_URL = "jdbc:postgresql://localhost:5432/db_db";
     static final String DB_USER = "postgres"; 
     static final String DB_PASS = "password"; 
-    static final int MAX_DAYS = 5; 
+    static final int MAX_DAYS = 100; 
 
 
     static class Project {
