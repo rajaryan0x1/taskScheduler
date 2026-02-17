@@ -7,7 +7,7 @@ public class JobScheduler {
     static final String DB_URL = "jdbc:postgresql://localhost:5432/db_db";
     static final String DB_USER = "postgres"; 
     static final String DB_PASS = "password"; 
-    static final int MAX_DAYS = 100; 
+    // static final int MAX_DAYS = 100; 
 
 
     static class Project {
@@ -115,51 +115,69 @@ public class JobScheduler {
         return projects;
     }
 
-   
-    private static void generateSchedule() {
+   private static void generateSchedule() {
         List<Project> projects = viewProjects();
+
+        if (projects.isEmpty()) {
+            System.out.println("No projects found!");
+            return;
+        }
         
-      
+        // --- NEW STEP: Find the maximum deadline dynamically ---
+        int maxDays = 0;
+        for (Project p : projects) {
+            if (p.deadline > maxDays) {
+                maxDays = p.deadline;
+            }
+        }
+        
+        // 1. Sort by Highest Revenue (Greedy)
         projects.sort((p1, p2) -> Double.compare(p2.revenue, p1.revenue));
 
-
-        Project[] weekSchedule = new Project[MAX_DAYS];
-        boolean[] slotFilled = new boolean[MAX_DAYS];
+        // Use the dynamic maxDays instead of a static constant
+        Project[] schedule = new Project[maxDays];
+        boolean[] slotFilled = new boolean[maxDays];
         double totalRevenue = 0;
-        int projectsScheduled = 0;
+        int scheduledCount = 0;
 
-
+        // 2. Schedule Logic
         for (Project p : projects) {
+            // Check backwards from deadline (capped at our dynamic maxDays)
+            int limit = Math.min(p.deadline, maxDays) - 1;
 
-
-            
-
-            for (int j = Math.min(p.deadline, MAX_DAYS) - 1; j >= 0; j--) {
+            for (int j = limit; j >= 0; j--) {
                 if (!slotFilled[j]) {
-                    weekSchedule[j] = p;
+                    schedule[j] = p;
                     slotFilled[j] = true;
                     totalRevenue += p.revenue;
-                    projectsScheduled++;
+                    scheduledCount++;
                     break; 
                 }
             }
         }
 
-
-        System.out.println("\n=== OPTIMAL WEEKLY SCHEDULE ===");
-        String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
+        // 3. Dynamic Display
+        System.out.println("\n=== OPTIMAL SCHEDULE (Max Deadline: " + maxDays + " days) ===");
+        String[] dayNames = {"Mon", "Tue", "Wed", "Thu", "Fri"};
         
-        for (int i = 0; i < MAX_DAYS; i++) {
-            System.out.print(days[i] + ": ");
+        for (int i = 0; i < maxDays; i++) {
+            // Only print weeks if we actually have data to show or empty slots up to max
+            if (i % 5 == 0) {
+                int weekNum = (i / 5) + 1;
+                System.out.println("\n--- WEEK " + weekNum + " ---");
+            }
+
+            String dayName = dayNames[i % 5];
+            System.out.printf("[%s] ", dayName);
+
             if (slotFilled[i]) {
-                System.out.println(weekSchedule[i].title + " (Rev: $" + weekSchedule[i].revenue + ")");
+                System.out.printf("%-20s (Rev: $%.2f)\n", schedule[i].title, schedule[i].revenue);
             } else {
-                System.out.println("[Free Slot]");
+                System.out.println("... Free Slot ...");
             }
         }
         
-        System.out.println("--------------------------------");
-        System.out.println("Total Projects Scheduled: " + projectsScheduled);
-        System.out.println("Total Expected Revenue: $" + totalRevenue);
+        System.out.println("\n--------------------------------");
+        System.out.println("Total Projects: " + scheduledCount);
+        System.out.println("Total Revenue:  $" + totalRevenue);
     }
-}
