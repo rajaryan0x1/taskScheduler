@@ -1,15 +1,15 @@
 import java.sql.*;
 import java.util.*;
 
-public class ProManageScheduler {
+public class JobScheduler {
 
-    // --- CONFIGURATION ---
-    static final String DB_URL = "jdbc:postgresql://localhost:5432/promanage_db";
-    static final String DB_USER = "postgres"; // Change to your username
-    static final String DB_PASS = "password"; // Change to your password
-    static final int MAX_DAYS = 5; // Monday to Friday
 
-    // --- MODEL CLASS ---
+    static final String DB_URL = "jdbc:postgresql://localhost:5432/db_db";
+    static final String DB_USER = "postgres"; 
+    static final String DB_PASS = "password"; 
+    static final int MAX_DAYS = 5; 
+
+
     static class Project {
         int id;
         String title;
@@ -30,7 +30,7 @@ public class ProManageScheduler {
         }
     }
 
-    // --- MAIN EXECUTION ---
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         while (true) {
@@ -42,8 +42,7 @@ public class ProManageScheduler {
             System.out.print("Enter choice: ");
             
             int choice = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
-
+            scanner.nextLine(); 
             switch (choice) {
                 case 1:
                     addProject(scanner);
@@ -63,9 +62,9 @@ public class ProManageScheduler {
         }
     }
 
-    // --- DATABASE OPERATIONS ---
+
     
-    // 1. Add Project
+
     private static void addProject(Scanner scanner) {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
             System.out.print("Enter Project Title: ");
@@ -91,7 +90,7 @@ public class ProManageScheduler {
         }
     }
 
-    // 2. View Projects
+
     private static List<Project> viewProjects() {
         List<Project> projects = new ArrayList<>();
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
@@ -116,37 +115,37 @@ public class ProManageScheduler {
         return projects;
     }
 
-    // --- THE ALGORITHM (Job Sequencing with Deadlines) ---
+   
     private static void generateSchedule() {
         List<Project> projects = viewProjects();
         
-        // Step A: Sort projects by Revenue in Descending Order (Greedy Approach)
+      
         projects.sort((p1, p2) -> Double.compare(p2.revenue, p1.revenue));
 
-        // Step B: Initialize Schedule (Array of 5 days, Index 0 = Mon, 4 = Fri)
+
         Project[] weekSchedule = new Project[MAX_DAYS];
         boolean[] slotFilled = new boolean[MAX_DAYS];
         double totalRevenue = 0;
         int projectsScheduled = 0;
 
-        // Step C: Allocate Slots
+
         for (Project p : projects) {
-            // Find the latest possible free slot before the deadline
-            // (e.g., if deadline is 3, check indices 2, then 1, then 0)
+
+
             
-            // We take Math.min(p.deadline, MAX_DAYS) because we can't schedule beyond Friday
+
             for (int j = Math.min(p.deadline, MAX_DAYS) - 1; j >= 0; j--) {
                 if (!slotFilled[j]) {
                     weekSchedule[j] = p;
                     slotFilled[j] = true;
                     totalRevenue += p.revenue;
                     projectsScheduled++;
-                    break; // Move to next project once scheduled
+                    break; 
                 }
             }
         }
 
-        // --- OUTPUT RESULTS ---
+
         System.out.println("\n=== OPTIMAL WEEKLY SCHEDULE ===");
         String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
         
